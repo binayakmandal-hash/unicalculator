@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UniCalc ✦ every calc you need, in one place</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <!-- set theme before the page paints so it doesn't flash -->
+  <script>
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+
+  <main class="card">
+    <header class="top">
+      <div>
+        <h1>UniCalc<span class="star">✦</span></h1>
+        <p class="sub">grades, bmi, money &amp; attendance, all sorted ✌️</p>
+      </div>
+      <button id="theme-btn" class="icon" type="button" title="Switch theme">☾</button>
+    </header>
+
+    <!-- Tool cards. The one Python says is active gets highlighted. -->
+    <nav class="tabs">
+      {% for key, icon, name in tabs %}
+        <button type="button" class="tab {{ 'active' if tool == key }}" data-tab="{{ key }}">
+          <span>{{ icon }}</span>{{ name }}
+        </button>
+      {% endfor %}
+    </nav>
+
+    <!-- 1. GRADES -->
+    <section class="panel {{ 'active' if tool == 'grades' }}" id="grades">
+      <h2>Grade Calculator</h2>
+      <p class="hint">Add each subject, the marks you got, and what it's out of.</p>
+      <form method="post">
+        <input type="hidden" name="tool" value="grades">
+        <div class="subj-head"><span>Subject</span><span>Marks</span><span>Out of</span><span></span></div>
+        <div id="subj-list">
+          {% for name, mark, out in grade_rows %}
+          <div class="subj-row">
+            <input type="text" name="subject" placeholder="e.g. Maths" aria-label="Subject name" value="{{ name }}" autocomplete="off">
+            <input type="text" inputmode="decimal" name="mark" placeholder="78" aria-label="Marks" value="{{ mark }}" autocomplete="off">
+            <input type="text" inputmode="decimal" name="outof" placeholder="100" aria-label="Marks out of" value="{{ out }}" autocomplete="off">
+            <button type="button" class="del-row" title="Remove subject" aria-label="Remove subject">✕</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="button" class="add-row">+ add subject</button>
+        <button class="main" type="submit">Calculate</button>
+      </form>
+      {% if tool == 'grades' %}{% include "result.html" %}{% endif %}
+    </section>
+
+    <!-- 2. BMI -->
+    <section class="panel {{ 'active' if tool == 'bmi' }}" id="bmi">
+      <h2>BMI Calculator</h2>
+      <p class="hint">Pick your units, then fill in your details.</p>
+      <form method="post">
+        <input type="hidden" name="tool" value="bmi">
+        <input type="hidden" name="unit" id="unit" value="{{ unit }}">
+
+        <div class="seg">
+          <button type="button" data-unit="us" class="{{ 'active' if unit == 'us' }}">US Units</button>
+          <button type="button" data-unit="metric" class="{{ 'active' if unit == 'metric' }}">Metric Units</button>
+        </div>
+
+        <label>Age
+          <span class="field">
+            <input type="text" inputmode="numeric" name="age" placeholder="25" value="{{ form.get('age', '') }}">
+            <em>ages 2 - 120</em>
+          </span>
+        </label>
+
+        <div class="group">
+          <span class="cap">Gender</span>
+          <div class="pills">
+            <label class="pill">
+              <input type="radio" name="gender" value="male" {{ 'checked' if form.get('gender', 'male') == 'male' }}>
+              <span>Male</span>
+            </label>
+            <label class="pill">
+              <input type="radio" name="gender" value="female" {{ 'checked' if form.get('gender') == 'female' }}>
+              <span>Female</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- US fields: feet, inches, pounds -->
+        <div class="units {{ 'active' if unit == 'us' }}" data-unit="us">
+          <div class="group">
+            <span class="cap">Height</span>
+            <div class="two">
+              <span class="field">
+                <input type="text" inputmode="numeric" name="feet" placeholder="5" aria-label="Height in feet" value="{{ form.get('feet', '') }}">
+                <em>feet</em>
+              </span>
+              <span class="field">
+                <input type="text" inputmode="decimal" name="inches" placeholder="9" aria-label="Height in inches" value="{{ form.get('inches', '') }}">
+                <em>inches</em>
+              </span>
+            </div>
+          </div>
+          <div class="group">
+            <span class="cap">Weight</span>
+            <span class="field">
+              <input type="text" inputmode="decimal" name="pounds" placeholder="150" aria-label="Weight in pounds" value="{{ form.get('pounds', '') }}">
+              <em>pounds</em>
+            </span>
+          </div>
+        </div>
+
+        <!-- Metric fields: centimeters, kilograms -->
+        <div class="units {{ 'active' if unit == 'metric' }}" data-unit="metric">
+          <div class="group">
+            <span class="cap">Height</span>
+            <span class="field">
+              <input type="text" inputmode="decimal" name="cm" placeholder="175" aria-label="Height in centimeters" value="{{ form.get('cm', '') }}">
+              <em>cm</em>
+            </span>
+          </div>
+          <div class="group">
+            <span class="cap">Weight</span>
+            <span class="field">
+              <input type="text" inputmode="decimal" name="kg" placeholder="70" aria-label="Weight in kilograms" value="{{ form.get('kg', '') }}">
+              <em>kg</em>
+            </span>
+          </div>
+        </div>
+
+        <button class="main" type="submit">Calculate</button>
+      </form>
+      {% if tool == 'bmi' %}{% include "result.html" %}{% endif %}
+      <p class="note">This is a simple educational calculator and not medical advice. The categories are for adults (20 and over). For ages 2 to 19, doctors use growth charts by age and sex, so no category is shown.</p>
+    </section>
+
+    <!-- 3. CURRENCY -->
+    <section class="panel {{ 'active' if tool == 'currency' }}" id="currency">
+      <h2>Currency Converter</h2>
+      <p class="hint">Pick any two currencies and an amount.</p>
+      <form method="post">
+        <input type="hidden" name="tool" value="currency">
+        <label>Amount
+          <input type="text" inputmode="decimal" name="cur_amount" placeholder="1000" value="{{ form.get('cur_amount', '') }}">
+        </label>
+        <div class="two">
+          <label>From
+            <select name="cur_from">
+              {% for code in rates %}
+                <option value="{{ code }}" {{ 'selected' if form.get('cur_from', 'INR') == code }}>{{ code }}{{ ' · ' ~ names[code] if code in names }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>To
+            <select name="cur_to">
+              {% for code in rates %}
+                <option value="{{ code }}" {{ 'selected' if form.get('cur_to', 'USD') == code }}>{{ code }}{{ ' · ' ~ names[code] if code in names }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <button class="main" type="submit">Convert</button>
+      </form>
+      {% if tool == 'currency' %}{% include "result.html" %}{% endif %}
+      <p class="note">{% if live_rates %}Live exchange rates from open.er-api.com, refreshed every hour. Good for estimates, not for real transactions.{% else %}Couldn't load live rates right now, so these are built-in approximate rates.{% endif %}</p>
+    </section>
+
+    <!-- 4. ATTENDANCE -->
+    <section class="panel {{ 'active' if tool == 'attendance' }}" id="attendance">
+      <h2>Attendance Calculator</h2>
+      <p class="hint">Minimum required attendance is {{ required }}%.</p>
+      <form method="post">
+        <input type="hidden" name="tool" value="attendance">
+        <div class="two">
+          <label>Total classes
+            <input type="text" inputmode="numeric" name="total" placeholder="60" value="{{ form.get('total', '') }}">
+          </label>
+          <label>Classes attended
+            <input type="text" inputmode="numeric" name="attended" placeholder="48" value="{{ form.get('attended', '') }}">
+          </label>
+        </div>
+        <button class="main" type="submit">Calculate</button>
+      </form>
+      {% if tool == 'attendance' %}{% include "result.html" %}{% endif %}
+    </section>
+
+    <!-- 5. BANKING -->
+    <section class="panel {{ 'active' if tool == 'bank' }}" id="bank">
+      <h2>Mini Banking System</h2>
+      <p class="hint">A demo account. Deposit, withdraw or just check your balance.</p>
+      <div class="balance">
+        <small>Balance</small>
+        <b>₹{{ '%.2f'|format(balance) }}</b>
+      </div>
+      <form method="post">
+        <input type="hidden" name="tool" value="bank">
+        <label>Amount (₹)
+          <input type="text" inputmode="decimal" name="bank_amount" placeholder="500" autocomplete="off">
+        </label>
+        <div class="btns">
+          <button class="main ghost" type="submit" name="action" value="check">Check</button>
+          <button class="main" type="submit" name="action" value="deposit">Deposit</button>
+          <button class="main" type="submit" name="action" value="withdraw">Withdraw</button>
+        </div>
+      </form>
+      {% if tool == 'bank' %}{% include "result.html" %}{% endif %}
+      <p class="note">Demo only, not real banking. The balance is stored in memory, is shared by everyone using this page, and resets when the server restarts.</p>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

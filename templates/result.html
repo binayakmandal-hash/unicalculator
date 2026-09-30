@@ -1,0 +1,10 @@
+{% if error %}
+  <div class="msg error">⚠️ {{ error }}</div>
+{% endif %}
+{% if result %}
+  <div class="msg result">
+    {% for label, value in result %}
+      <div class="row"><span>{{ label }}</span><b>{{ value }}</b></div>
+    {% endfor %}
+  </div>
+{% endif %}
